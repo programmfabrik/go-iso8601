@@ -18,6 +18,9 @@ const (
 	WIDTH_YEAR Width = iota
 	WIDTH_YEAR_MONTH
 	WIDTH_DATE
+	WIDTH_YEAR_TZ
+	WIDTH_YEAR_MONTH_TZ
+	WIDTH_DATE_TZ
 	WIDTH_DATE_TIME
 	WIDTH_DATE_TIME_SEC
 	WIDTH_DATE_TIME_SEC_TZ
@@ -28,6 +31,9 @@ const (
 	YEAR              = "2006"
 	YEAR_MONTH        = "2006-01"
 	DATE              = "2006-01-02"
+	YEAR_TZ           = "2006-07:00"
+	YEAR_MONTH_TZ     = "2006-01-07:00"
+	DATE_TZ           = "2006-01-02-07:00"
 	DATE_TIME         = "2006-01-02T15:04"
 	DATE_TIME_SEC     = "2006-01-02T15:04:05"
 	DATE_TIME_SEC_TZ  = "2006-01-02T15:04:05Z07:00"
@@ -38,6 +44,9 @@ var formats = map[Width]string{
 	WIDTH_YEAR:              YEAR,
 	WIDTH_YEAR_MONTH:        YEAR_MONTH,
 	WIDTH_DATE:              DATE,
+	WIDTH_YEAR_TZ:           YEAR_TZ,
+	WIDTH_YEAR_MONTH_TZ:     YEAR_MONTH_TZ,
+	WIDTH_DATE_TZ:           DATE_TZ,
 	WIDTH_DATE_TIME:         DATE_TIME,
 	WIDTH_DATE_TIME_SEC:     DATE_TIME_SEC,
 	WIDTH_DATE_TIME_SEC_TZ:  DATE_TIME_SEC_TZ,
@@ -48,6 +57,9 @@ var parseLayouts = []layout{
 	{WIDTH_YEAR, YEAR},
 	{WIDTH_YEAR_MONTH, YEAR_MONTH},
 	{WIDTH_DATE, DATE},
+	{WIDTH_YEAR_TZ, YEAR_TZ},
+	{WIDTH_YEAR_MONTH_TZ, YEAR_MONTH_TZ},
+	{WIDTH_DATE_TZ, DATE_TZ},
 	{WIDTH_DATE_TIME, DATE_TIME},
 	{WIDTH_DATE_TIME_SEC, DATE_TIME_SEC},
 	{WIDTH_DATE_TIME_SEC, "2006-01-02 15:04:05.999999999"},
@@ -177,7 +189,8 @@ func (t Time) Format() string {
 // HasTime returns true if the format contains time information
 func (t Time) HasTime() bool {
 	switch t.Width {
-	case WIDTH_YEAR, WIDTH_YEAR_MONTH, WIDTH_DATE:
+	case WIDTH_YEAR, WIDTH_YEAR_MONTH, WIDTH_DATE,
+		WIDTH_YEAR_TZ, WIDTH_YEAR_MONTH_TZ, WIDTH_DATE_TZ:
 		return false
 	}
 	return true
@@ -310,6 +323,15 @@ func Parse(dOrig string) (t *Time, err error) {
 		case WIDTH_DATE:
 			t.From = time.Date(yearI, t2.Month(), t2.Day(), 0, 0, 0, 0, time.UTC)
 			t.To = time.Date(yearI, t2.Month(), t2.Day(), 23, 59, 59, 0, time.UTC)
+		case WIDTH_YEAR_TZ:
+			t.From = time.Date(yearI, time.Month(1), 1, 0, 0, 0, 0, t2.Location())
+			t.To = time.Date(yearI, time.Month(12), 31, 23, 59, 59, 0, t2.Location())
+		case WIDTH_YEAR_MONTH_TZ:
+			t.From = time.Date(yearI, t2.Month(), 1, 0, 0, 0, 0, t2.Location())
+			t.To = time.Date(yearI, t2.Month(), daysIn(t2.Month(), yearI), 23, 59, 59, 0, t2.Location())
+		case WIDTH_DATE_TZ:
+			t.From = time.Date(yearI, t2.Month(), t2.Day(), 0, 0, 0, 0, t2.Location())
+			t.To = time.Date(yearI, t2.Month(), t2.Day(), 23, 59, 59, 0, t2.Location())
 		case WIDTH_DATE_TIME:
 			t.From = time.Date(yearI, t2.Month(), t2.Day(), t2.Hour(), t2.Minute(), 0, 0, time.UTC)
 			t.To = time.Date(yearI, t2.Month(), t2.Day(), t2.Hour(), t2.Minute(), 59, 0, time.UTC)

@@ -34,9 +34,23 @@ func TestCases(t *testing.T) {
 		{"43", true, WIDTH_YEAR, "", ""},
 		{"400", true, WIDTH_YEAR, "", ""},
 		{"2000", false, WIDTH_YEAR, "2000-01-01T00:00:00Z", "2000-12-31T23:59:59Z"},
-		// {"2000+01:00", false, WIDTH_YEAR, "2000-01-01T00:00:00+01:00", "2000-12-31T23:59:59+01:00"},
 		{"2000-10", false, WIDTH_YEAR_MONTH, "2000-10-01T00:00:00Z", "2000-10-31T23:59:59Z"},
 		{"1999-10-12", false, WIDTH_DATE, "1999-10-12T00:00:00Z", "1999-10-12T23:59:59Z"},
+		// partial dates with explicit timezone offset (fylr extension to ISO 8601).
+		// Only ±HH:MM (with colon and minutes) is accepted — Z and bare ±HH /
+		// ±HHMM forms are intentionally not supported so that "1977-01" stays
+		// unambiguously WIDTH_YEAR_MONTH and "1977-05-12" stays WIDTH_DATE.
+		{"1977+01:00", false, WIDTH_YEAR_TZ, "1977-01-01T00:00:00+01:00", "1977-12-31T23:59:59+01:00"},
+		{"1977-05:00", false, WIDTH_YEAR_TZ, "1977-01-01T00:00:00-05:00", "1977-12-31T23:59:59-05:00"},
+		{"1977-05+01:00", false, WIDTH_YEAR_MONTH_TZ, "1977-05-01T00:00:00+01:00", "1977-05-31T23:59:59+01:00"},
+		{"1977-05-10:00", false, WIDTH_YEAR_MONTH_TZ, "1977-05-01T00:00:00-10:00", "1977-05-31T23:59:59-10:00"},
+		{"1977-05-29+01:00", false, WIDTH_DATE_TZ, "1977-05-29T00:00:00+01:00", "1977-05-29T23:59:59+01:00"},
+		{"1977-05-29-10:00", false, WIDTH_DATE_TZ, "1977-05-29T00:00:00-10:00", "1977-05-29T23:59:59-10:00"},
+		// no-Z, no-bare-offset for partial dates: these must NOT be parsed as
+		// TZ-bearing — they are the existing partial-date widths.
+		{"1977Z", true, WIDTH_YEAR_TZ, "", ""},        // Z not accepted on partial dates
+		{"1977+01", true, WIDTH_YEAR_TZ, "", ""},      // bare ±HH not accepted
+		{"1977+0100", true, WIDTH_YEAR_TZ, "", ""},    // bare ±HHMM not accepted
 		{"1900-02-29", true, WIDTH_DATE, "", ""}, // No leap year
 		{"2001-02-29", true, WIDTH_DATE, "", ""}, // No leap year
 		{"2000-02-29", false, WIDTH_DATE, "2000-02-29T00:00:00Z", "2000-02-29T23:59:59Z"},
